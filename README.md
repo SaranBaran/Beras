@@ -1,0 +1,1 @@
+conda activate csci2470
