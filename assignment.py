@@ -1,5 +1,5 @@
 from types import SimpleNamespace
-from beras.activations import ReLU, LeakyReLU, Softmax
+from beras.activations import ReLU, LeakyReLU, Softmax, GELU, Sigmoid
 from beras.layers import Dense
 from beras.losses import CategoricalCrossEntropy, MeanSquaredError
 from beras.metrics import CategoricalAccuracy
@@ -15,32 +15,41 @@ def get_model():
         [
            # Add in your layers here as elements of the list!
            # e.g. Dense(10, 10),
+           Dense(784,784),
+           GELU(),
+           Dense(784,784),
+           GELU(),
+           Dense(784,10),
+           Softmax()
         ]
     )
     return model
 
 def get_optimizer():
     # choose an optimizer, initialize it and return it!
-    return ...
+    return Adam(.01)
 
 def get_loss_fn():
     # choose a loss function, initialize it and return it!
-    return ...
+    return CategoricalCrossEntropy()
 
 def get_acc_fn():
     # choose an accuracy metric, initialize it and return it!
-    return ...
+    return CategoricalAccuracy()
 
 if __name__ == '__main__':
 
     ### Use this area to test your implementation!
-
+    batch_size = 520
     # 1. Create a SequentialModel using get_model
-
+    model = get_model()
     # 2. Compile the model with optimizer, loss function, and accuracy metric
-    
+    model.compile(get_optimizer(), get_loss_fn(), get_acc_fn())
     # 3. Load and preprocess the data
-    
+    train_inputs, train_labels, test_inputs, test_labels = load_and_preprocess_data()
+    OneHotEncoder.fit(train_labels)
+    OneHotEncoder.fit(test_labels)
     # 4. Train the model
-
+    model.fit(train_inputs, train_labels, 10, batch_size)
     # 5. Evaluate the model
+    np.save("predictions.npy", model.evaluate(test_inputs, test_labels, batch_size))

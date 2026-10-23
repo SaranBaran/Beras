@@ -36,6 +36,22 @@ class GradientTape:
         # Use id(tensor) to get the object id of a tensor object.
         # in the end, your grads dictionary should have the following structure:
         # {id(tensor): [gradient]}
+        while queue:
+            curr_node = queue.pop()
+            layers = self.previous_layers[id(curr_node)]
+            input_gradients = self.compose_input_gradients(grads[id(curr_node)])
+            weight_gradients = self.compose_weight_gradients(grads[id(curr_node)])
+            for input, input_grad in zip(layers.inputs, input_gradients):
+                queue.append(input)
+                grads[input] = input_grad
+            for weight, weight_grad in zip(layers.weights, weight_gradients):
+                grads[weight] = weight_grad
+        
+        grad_of_sources = []
+        for source in sources:
+            grad_of_sources.append(Tensor(grads[source]))
+
+        return grad_of_sources
 
         # What tensor and what gradient is for you to implement!
         # compose_input_gradients and compose_weight_gradients are methods that will be helpful
