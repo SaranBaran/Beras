@@ -88,7 +88,9 @@ class Model(Diffable):
                 batch_metrics = self.batch_step(inputs, labels, training=True)
                 for k, v in batch_metrics.items():
                     epoch_metrics[k] += [v]
+                print_stats(batch_metrics, i, num_batch, e) 
             update_metric_dict(agg_metrics, epoch_metrics)
+            print_stats(epoch_metrics, epoch=e, avg=True)
         return agg_metrics
 
     def evaluate(self, x: Tensor, y: Union[Tensor, np.ndarray], batch_size: int):
