@@ -37,19 +37,24 @@ class GradientTape:
         # in the end, your grads dictionary should have the following structure:
         # {id(tensor): [gradient]}
         while queue:
-            curr_node = queue.pop()
-            layers = self.previous_layers[id(curr_node)]
-            input_gradients = self.compose_input_gradients(grads[id(curr_node)])
-            weight_gradients = self.compose_weight_gradients(grads[id(curr_node)])
-            for input, input_grad in zip(layers.inputs, input_gradients):
+            curr_node = queue.pop(0)
+            layer = self.previous_layers[id(curr_node)]
+            if layer is None:
+                continue
+            input_gradients = layer.compose_input_gradients(grads[id(curr_node)])
+            weight_gradients = layer.compose_weight_gradients(grads[id(curr_node)])
+            for input, input_grad in zip(layer.inputs, input_gradients):
                 queue.append(input)
-                grads[input] = input_grad
-            for weight, weight_grad in zip(layers.weights, weight_gradients):
-                grads[weight] = weight_grad
+                if grads[id(input)] is None:
+                    grads[id(input)] = input_grad
+                else:
+                    grads[id(input)] = grads[id(input)] + input_grad
+            for weight, weight_grad in zip(layer.weights, weight_gradients):
+                grads[id(weight)] = weight_grad
         
         grad_of_sources = []
         for source in sources:
-            grad_of_sources.append(Tensor(grads[source]))
+            grad_of_sources.append(Tensor(grads[id(source)]))
 
         return grad_of_sources
 

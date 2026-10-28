@@ -77,13 +77,18 @@ class Model(Diffable):
         Trains the model by iterating over the input dataset and feeding input batches
         into the batch_step method with training. At the end, the metrics are returned.
         """
-        num_batch = x.shape[0]/batch_size
-        agg_metrics = {}
+        num_batch = x.shape[0]//batch_size
+        agg_metrics = defaultdict(list)
         for e in range(epochs):
-            for i in range(num_batch-batch_size):
-                inputs = x[i:i+batch_size]
-                labels = y[i:i+batch_size]
-                agg_metrics += self.batch_step(inputs,labels,True)
+            epoch_metrics = defaultdict(list)
+            for i in range(num_batch):
+                start = i * batch_size 
+                inputs = x[start:start + batch_size]
+                labels = y[start:start + batch_size]
+                batch_metrics = self.batch_step(inputs, labels, training=True)
+                for k, v in batch_metrics.items():
+                    epoch_metrics[k] += [v]
+            update_metric_dict(agg_metrics, epoch_metrics)
         return agg_metrics
 
     def evaluate(self, x: Tensor, y: Union[Tensor, np.ndarray], batch_size: int):
@@ -96,12 +101,15 @@ class Model(Diffable):
         NOTE: This method is almost identical to fit (think about how training and testing differ --
         the core logic should be the same)
         """
-        num_batch = x.shape[0]/batch_size
-        agg_metrics = {}
-        for i in range(num_batch-batch_size):
-            inputs = x[i:i+batch_size]
-            labels = y[i:i+batch_size]
-            agg_metrics += self.batch_step(inputs,labels,False)
+        num_batch = x.shape[0]//batch_size
+        agg_metrics = defaultdict(list)
+        for i in range(num_batch):
+            start = i * batch_size 
+            inputs = x[start:start + batch_size]
+            labels = y[start:start + batch_size]
+            batch_metrics, preds = self.batch_step(inputs, labels, training=False)
+            for k, v in batch_metrics.items():
+                agg_metrics[k] += [v]
         return agg_metrics
 
     def get_input_gradients(self) -> list[Tensor]:
@@ -126,7 +134,7 @@ class SequentialModel(Model):
         """
         agg_var = inputs
         for layer in self.layers:
-            agg_var = layer(inputs)
+            agg_var = layer(agg_var)
         return agg_var
 
     def batch_step(self, x:Tensor, y: Tensor, training: bool =True) -> dict[str, float]:
@@ -138,11 +146,10 @@ class SequentialModel(Model):
         with GradientTape() as tape:
             pred_vals = self.forward(x)
             loss = self.compiled_loss(pred_vals, y)
-            if training:
-                gradients = tape.gradient(loss, self.trainable_variables)
-                self.optimizer.apply_gradient(self.trainable_variables, gradients)
-            acc = self.compiled_acc(pred_vals, y)
+        acc = self.compiled_acc(pred_vals, y)
         if training:
+            gradients = tape.gradient(loss, self.trainable_variables)
+            self.optimizer.apply_gradient(self.trainable_variables, gradients)
             return {"loss": loss, "acc": acc}
         else:
             return {"loss": loss, "acc": acc}, pred_vals
