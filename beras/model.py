@@ -114,7 +114,8 @@ class Model(Diffable):
             all_preds.append(preds)
             for k, v in batch_metrics.items():
                 agg_metrics[k] += [v]
-        return agg_metrics, np.concatenate(all_preds, axis=0)
+        avg_metrics = {k: float(np.mean(v)) for k, v in agg_metrics.items()}
+        return avg_metrics, np.concatenate(all_preds, axis=0)
 
     def get_input_gradients(self) -> list[Tensor]:
         return super().get_input_gradients()
