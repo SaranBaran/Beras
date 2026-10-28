@@ -11,23 +11,16 @@ import numpy as np
 from beras.model import SequentialModel
 
 def get_model():
-    model = SequentialModel(
-        [
-           # Add in your layers here as elements of the list!
-           # e.g. Dense(10, 10),
-           Dense(784,784),
-           GELU(),
-           Dense(784,784),
-           GELU(),
-           Dense(784,10),
-           Softmax()
-        ]
-    )
-    return model
+    return SequentialModel([
+        Dense(784, 256, "kaiming"),
+        GELU(),
+        Dense(256, 10, "kaiming"),
+        Softmax(),
+    ])
 
 def get_optimizer():
     # choose an optimizer, initialize it and return it!
-    return Adam(.01)
+    return Adam(.001)
 
 def get_loss_fn():
     # choose a loss function, initialize it and return it!
@@ -40,16 +33,20 @@ def get_acc_fn():
 if __name__ == '__main__':
 
     ### Use this area to test your implementation!
-    batch_size = 520
+    batch_size = 128
     # 1. Create a SequentialModel using get_model
     model = get_model()
     # 2. Compile the model with optimizer, loss function, and accuracy metric
     model.compile(get_optimizer(), get_loss_fn(), get_acc_fn())
     # 3. Load and preprocess the data
     train_inputs, train_labels, test_inputs, test_labels = load_and_preprocess_data()
-    OneHotEncoder.fit(train_labels)
-    OneHotEncoder.fit(test_labels)
+    encoder = OneHotEncoder()
+    encoder.fit(train_labels)
+    train_labels_oh = encoder(train_labels)
+    test_labels_oh = encoder(test_labels)
     # 4. Train the model
-    model.fit(train_inputs, train_labels, 10, batch_size)
+    model.fit(train_inputs, train_labels_oh, epochs=10, batch_size=batch_size)
     # 5. Evaluate the model
-    np.save("predictions.npy", model.evaluate(test_inputs, test_labels, batch_size))
+    metrics, preds = model.evaluate(test_inputs, test_labels_oh, batch_size)
+    print("Test accuracy:", np.mean(metrics["acc"]))
+    np.save("predictions.npy", preds)
