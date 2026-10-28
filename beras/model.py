@@ -150,7 +150,7 @@ class SequentialModel(Model):
             loss = self.compiled_loss(pred_vals, y)
         acc = self.compiled_acc(pred_vals, y)
         if training:
-            gradients = tape.apply_gradients(loss, self.trainable_variables)
+            gradients = tape.gradient(loss, self.trainable_variables)
             self.optimizer.apply_gradients(self.trainable_variables, gradients)
             return {"loss": loss, "acc": acc}
         else:
