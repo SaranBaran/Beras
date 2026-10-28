@@ -30,7 +30,7 @@ class Dense(Diffable):
         batch_size = x.shape[0]
         output_size = self.w.shape[1]
         dW = np.repeat(np.expand_dims(x, -1), output_size, axis=-1) 
-        db = np.ones((batch_size, output_size))   
+        db = np.ones_like(self.b) 
         return [dW,db]
     
 

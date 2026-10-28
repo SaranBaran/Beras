@@ -2,8 +2,6 @@ import numpy as np
 
 from beras.core import Diffable, Tensor
 
-import tensorflow as tf
-
 
 class Loss(Diffable):
     @property
@@ -23,7 +21,7 @@ class MeanSquaredError(Loss):
         y_true = self.inputs[1]
         outputs = self.inputs[0].size
         dinputs = -2 * (y_true - y_pred) / outputs
-        return [Tensor(dinputs)]
+        return [Tensor(dinputs), Tensor(np.zeros_like(y_true))]
 
 class CategoricalCrossEntropy(Loss):
 
@@ -42,4 +40,4 @@ class CategoricalCrossEntropy(Loss):
         y_true = self.inputs[1]
         n = y_true.shape[0]
         dinputs = -y_true / (n * y_pred)
-        return [Tensor(dinputs)]
+        return [Tensor(dinputs), Tensor(np.zeros_like(y_true))]

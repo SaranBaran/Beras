@@ -46,15 +46,15 @@ class GradientTape:
             for input, input_grad in zip(layer.inputs, input_gradients):
                 queue.append(input)
                 if grads[id(input)] is None:
-                    grads[id(input)] = input_grad
+                    grads[id(input)] = [input_grad]
                 else:
-                    grads[id(input)] = grads[id(input)] + input_grad
+                    grads[id(input)] = [grads[id(input)][0] + input_grad]
             for weight, weight_grad in zip(layer.weights, weight_gradients):
-                grads[id(weight)] = weight_grad
+                grads[id(weight)] = [weight_grad]
         
         grad_of_sources = []
         for source in sources:
-            grad_of_sources.append(Tensor(grads[id(source)]))
+            grad_of_sources.append(Tensor(grads[id(source)][0]))
 
         return grad_of_sources
 
