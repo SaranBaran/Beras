@@ -26,12 +26,12 @@ class Dense(Diffable):
         return [dW]
 
     def get_weight_gradients(self) -> list[Tensor]:
-        eye = np.eye(self.outputs.shape[1])
-        f = np.expand_dims(self.inputs[0], axis=-1) #np.eye, np.repeat, np.expand_dims
-        df = Tensor(f)
-        b = np.ones_like(self.b)
-        db = Tensor(b)
-        return [df,db]
+        x = self.inputs[0]
+        batch_size = x.shape[0]
+        output_size = self.w.shape[1]
+        dW = np.repeat(np.expand_dims(x, -1), output_size, axis=-1) 
+        db = np.ones((batch_size, output_size))   
+        return [dW,db]
     
 
     @staticmethod

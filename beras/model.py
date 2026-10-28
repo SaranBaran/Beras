@@ -103,14 +103,16 @@ class Model(Diffable):
         """
         num_batch = x.shape[0]//batch_size
         agg_metrics = defaultdict(list)
+        all_preds = []
         for i in range(num_batch):
             start = i * batch_size 
             inputs = x[start:start + batch_size]
             labels = y[start:start + batch_size]
             batch_metrics, preds = self.batch_step(inputs, labels, training=False)
+            all_preds.append(preds)
             for k, v in batch_metrics.items():
                 agg_metrics[k] += [v]
-        return agg_metrics
+        return agg_metrics, np.concatenate(all_preds, axis=0)
 
     def get_input_gradients(self) -> list[Tensor]:
         return super().get_input_gradients()
