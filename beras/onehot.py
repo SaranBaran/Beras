@@ -26,20 +26,20 @@ class OneHotEncoder(Callable):
         self.dictionary = {}
         labels = np.unique(data)
         labels_matrix = np.eye(labels.size)
-        for i in labels.size:
+        for i in range(labels.size):
             self.dictionary[labels[i]] = labels_matrix[i]
 
     def forward(self, data):
-        if self.dictionary is None:
+        if getattr(self, "dictionary", None) is None:
             self.fit(data)
         labels_array = []
         for d in data:
             labels_array.append(self.dictionary[d])
-        return np.ndarray(labels_array)
+        return np.array(labels_array)
 
     def inverse(self, data):
         labels_array = []
         for d in data:
-            keys = [key for key, val in self.dictionary.items() if val == d]
+            keys = [key for key, val in self.dictionary.items() if np.array_equal(val, d)]
             labels_array.append(keys[0])
-        return np.ndarray(labels_array)
+        return np.array(labels_array)

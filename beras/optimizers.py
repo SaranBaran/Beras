@@ -14,12 +14,10 @@ class RMSProp:
         self.beta = beta
         self.epsilon = epsilon
         self.v = defaultdict(lambda: 0)
-
     def apply_gradients(self, trainable_params, grads):
-        B = self.beta
-        for param, grad, v in zip(trainable_params, grads,self.v):
-            v.assign((0.9*B)+(1-B)*np.square(grad))
-            param.assign(param-(self.learning_rate/(np.square(v))+self.epsilon)*(grad))
+        for i, (param, grad) in enumerate(zip(trainable_params, grads)):
+            self.v[i] = self.beta * self.v[i] + (1 - self.beta) * np.square(grad)
+            param.assign(param - self.learning_rate / (np.sqrt(self.v[i]) + self.epsilon) * grad)
 
 class Adam:
     def __init__(
@@ -35,11 +33,11 @@ class Adam:
         self.m = defaultdict(lambda: 0)         # First moment zero vector
         self.v = defaultdict(lambda: 0)         # Second moment zero vector.
         self.t = 0                              # Time counter
-
     def apply_gradients(self, trainable_params, grads):
-        for m, param,grad, v in zip(self.m, trainable_params, grads, self.v):
-            m.assign((m*self.beta_1)+(1-self.beta_1)*(grad))
-            v.assign((v*self.beta_2)+(1-self.beta_2)*np.square(grad))
-            m_hat = m/(1-np.power(self.beta_1,self.t)) #doublecheck if power works
-            v_hat = v/(1-np.power(self.beta_2,self.t))
-            param.assign(param-((self.learning_rate*m_hat)/(np.square(v_hat))+self.epsilon))
+        self.t += 1
+        for i, (param, grad) in enumerate(zip(trainable_params, grads)):
+            self.m[i] = self.beta_1 * self.m[i] + (1 - self.beta_1) * grad
+            self.v[i] = self.beta_2 * self.v[i] + (1 - self.beta_2) * np.square(grad)
+            m_hat = self.m[i] / (1 - self.beta_1 ** self.t)
+            v_hat = self.v[i] / (1 - self.beta_2 ** self.t)
+            param.assign(param - self.learning_rate * m_hat / (np.sqrt(v_hat) + self.epsilon))
